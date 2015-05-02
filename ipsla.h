@@ -29,4 +29,4 @@ struct measurement_phase
 	char sender_send_time,responder_receive_time,responder_send_time,responder,sender_receive_time,sender_clock_offset,responder_clock_offset;
 	__int32 sender_sequence_number,response_sequence_number;
 	long data; /*ver com Nobre a definição desta variavel*/
-}
+};
