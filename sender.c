@@ -16,124 +16,56 @@
 #include <windows.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <Ws2tcpip.h>
+#include <iostream>
+#include <cstdlib>
+using namespace std;
 
-/*APAGAR
-   The Control Phase begins with the Sender sending a Control-Request
-   message to the Responder.  The Control-Request message is sent to UDP
-   port 1167 on the Responder requesting that a Measurement Phase UDP
-   port be opened and, in addition, indicates the duration for which the
-   port needs to remain open.  The Responder replies by sending a
-   Control-Response with an appropriate Status indicating Success when
-   the Sender identity is verified and the requested UDP port was
-   successfully opened.  In all other cases, a non-zero Status is
-   returned in the Command-Header Status field.
-*/
-
-/*Define variáveis do protocolo de controle
-*/
+//Define variáveis do protocolo de controle
 
 #define SENDER_CONTROL_PORT	3000
 #define RESPONDER_CONTROL_PORT 1167
 
-/*Define variáveis para Control-request Message
-  0                   1                   2                   3
-        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                                                               |
-       +                                                               +
-       |                                                               |
-       +                                                               +
-       |                      Command-Header                           |
-       +                                                               +
-       |                                                               |
-       +                                                               +
-       |                                                               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |     Command                   |           Status              |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                          Command-Length                       |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                                                               |
-       .                                                               .
-       .                          Data                                 .
-       .                                                               .
-       |                                                               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |     Command                   |          Status               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                         Command-Length                        |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                                                               |
-       .                                                               .
-       .                          Data                                 .
-       .                                                               .
-       |                                                               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-*/
+struct control_request_message /*Define as variáveis utilizadas durante a sessão de controle do IPSLA para o envio de mensagens de controle*/
+{
+	__int32 sequence_number,total_length;
+	__int8 version,reserved;
+	char send_timestamp;
 
-/*Command-header
- 0                   1                   2                   3
-        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       | Version = 2   |     Reserved  |          Status               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                         Sequence Number                       |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                         Total Length                          |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |                        Send Timestamp                         |
-       +                                                               +
-       |                                                               |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	struct CSLD_authentication
+	{
+		__int16 command,status,keyid;
+		__int32 command_length;
+		__int8 mode,reserved;
+		long random_number;
+		long message_authentication_digest;
+	};
 
-   The Command-Header fields hold the following meaning:
+	struct CLSD_measurement
+	{
+		__int8 address_type,role;
+		__int16 command,status,reserved,reserved2,control_source_port,measurement_source_port,measurement_destination_port;
+		__int32 command_length,session_identifier,duration;
+		long control_source_address,control_destination_address,measurement_source_address,measurement_destination_address;
+	};
+};
 
-   +-----------+-----------+-------------------------------------------+
-   | Field     | Size      | Description                               |
-   |           | (bits)    |                                           |
-   +-----------+-----------+-------------------------------------------+
-   | Version   | 8         | Current version supported and is to be    |
-   |           |           | set to 2.                                 |
-   | --------- | --------- | --------------------------                |
-   | Reserved  | 8         | Reserved field, MUST be set to 0.         |
-   | --------- | --------- | --------------------------                |
-   | Status    | 16        | Indicates success or failure for the      |
-   |           |           | entire message.  In a Control-Request, the|
-   |           |           | value of the Status field is ignored by   |
-   |           |           | the receiver and SHOULD be set to 0.      |
-   | --------- | --------- | --------------------------                |
-   | Sequence  | 32        | Used to map requests to responses.  This  |
-   | Number    |           | is a monotonically increasing number.     |
-   |           |           | Implementations MAY reset the sequence    |
-   |           |           | number to 0 after a reboot, and it SHOULD |
-   |           |           | wrap around after all bits have been      |
-   |           |           | exceeded.                                 |
-   | --------- | --------- | --------------------------                |
-   | Total     | 32        | Carries the total length of the Control   |
-   | Length    |           | message in number of octets.              |
-   | --------- | --------- | --------------------------                |
-   | --------- | --------- | --------------------------                |
-   | Send      | 64        | This field is set to the time the command |
-   | Timestamp |           | was submitted for transmission and is     |
-   |           |           | updated for a response.  This field MAY   |
-   |           |           | be used when security is of concern in    |
-   |           |           | order to prevent replay attacks.  SHOULD  |
-   |           |           | be updated when the response is sent.     |
-   |           |           | When not being used, it MUST be set to all|
-   |           |           | 0's.  The format is as given in RFC 5905. |
-   +-----------+-----------+-------------------------------------------+
-   */
 
 int main ()
 {
-	__int32 command_header_sequence_number;
-	__int8 command_header_version;
-	__int8 command_header_reserved;
-	__int32 command_header_total_length;
-	char command_header_send_timestamp;
-	
-	command_header_version=2;
-	command_header_reserved=0;
+	control_request_message command_header;
+	control_request_message::CSLD_authentication authentication;
+	control_request_message::CLSD_measurement measurement;
+	authentication.status=0;
+	authentication.mode=0;
+	authentication.reserved=0;
+	measurement.status=0;
+	measurement.address_type=2;
+	measurement.role=1;
+	measurement.reserved=0;
+	measurement.reserved2=0;
+	command_header.version=2;
+	command_header.reserved=0;
 
 	printf("Escreva ja!\n");
     return (0);
