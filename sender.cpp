@@ -26,7 +26,8 @@ using namespace std;
 #define SENDER_CONTROL_PORT	3000
 #define RESPONDER_CONTROL_PORT 1167
 
-struct control_request_message /*Define as variáveis utilizadas durante a sessão de controle do IPSLA para o envio de mensagens de controle*/
+/*Define as variáveis utilizadas durante a sessão de controle do IPSLA para o envio de mensagens de controle*/
+struct control_request_message
 {
 	__int32 sequence_number,total_length;
 	__int8 version,reserved;
@@ -51,7 +52,7 @@ struct control_request_message /*Define as variáveis utilizadas durante a sess�
 };
 
 
-int main ()
+int main (void)
 {
 	control_request_message command_header;
 	control_request_message::CSLD_authentication authentication;
@@ -66,6 +67,7 @@ int main ()
 	measurement.reserved2=0;
 	command_header.version=2;
 	command_header.reserved=0;
+
 
 	printf("Escreva ja!\n");
     return (0);
