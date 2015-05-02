@@ -41,7 +41,7 @@ struct control_request_message /*Define as vari√°veis utilizadas durante a sess√
 		long message_authentication_digest;
 	};
 
-	struct CLSD_measurement
+	struct CSLD_measurement
 	{
 		__int8 address_type,role;
 		__int16 command,status,reserved,reserved2,control_source_port,measurement_source_port,measurement_destination_port;
@@ -55,7 +55,7 @@ int main ()
 {
 	control_request_message command_header;
 	control_request_message::CSLD_authentication authentication;
-	control_request_message::CLSD_measurement measurement;
+	control_request_message::CSLD_measurement measurement;
 	authentication.status=0;
 	authentication.mode=0;
 	authentication.reserved=0;
