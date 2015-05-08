@@ -169,28 +169,29 @@ typedef struct twamp_stop {
 
 /* Session-Sender TWAMP-Test packet for Unauthenticated mode */
 typedef struct test_packet {
-    uint32_t seq_number;
-    TWAMPTimestamp time;
-    uint16_t error_estimate;
-    uint8_t padding[TST_PKT_SIZE-14];
+    uint32_t seq_number; //Conforme
+    TWAMPTimestamp time; //Conforme
+    uint16_t error_estimate; //Conforme
+    uint8_t padding[TST_PKT_SIZE-14]; //Conforme
 } SenderUPacket;
 
 /* Session-Reflector TWAMP-Test packet for Unauthenticated mode */
 typedef struct reflector_unauth_packet {
-    uint32_t seq_number;
-    TWAMPTimestamp time;
-    uint16_t error_estimate;
-    uint8_t mbz1[2];
-    TWAMPTimestamp receive_time;
-    uint32_t sender_seq_number;
-    TWAMPTimestamp sender_time;
-    uint16_t sender_error_estimate;
-    uint8_t mbz2[2];
-    uint8_t sender_ttl;
-    uint8_t padding[TST_PKT_SIZE-41];
+    uint32_t seq_number; //Conforme
+    TWAMPTimestamp time; //Conforme
+    uint16_t error_estimate; //Conforme
+    uint8_t mbz1[2]; //Conforme
+    TWAMPTimestamp receive_time; //Conforme
+    uint32_t sender_seq_number; //Conforme
+    TWAMPTimestamp sender_time; //Conforme
+    uint16_t sender_error_estimate; //Conforme
+    uint8_t mbz2[2]; //Conforme
+    uint8_t sender_ttl; //Conforme
+    uint8_t padding[TST_PKT_SIZE-41]; //Conforme
 } ReflectorUPacket;
 
 /* Session-Sender TWAMP-Test packet for Authenticated/Encrypted mode */
+/*NÃO SERÁ USADO NESTE TRABALHO*/
 typedef struct reflector_auth_packet {
     uint32_t seq_number;
     uint8_t mbz1[12];
@@ -210,6 +211,7 @@ typedef struct reflector_auth_packet {
 } ReflectorAPacket;
 
 /* Session-Reflector TWAMP-Test packet for Authenticated/Encrypted mode */
+/*NÃO SERÁ USADO NESTE TRABALHO*/
 typedef struct auth_test_packet {
     uint32_t seq_number;
     uint8_t mbz1[12];
