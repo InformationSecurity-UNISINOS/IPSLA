@@ -27,9 +27,25 @@ using namespace std;
 #define SENDER_CONTROL_PORT	3000
 #define RESPONDER_CONTROL_PORT 1167
 
+struct client_info
+{
+	int socket;
+	struct sockaddr_in addr;
+};
+
+static int control_request_msg (struct client_info *client)
+{
+	int socket = client->socket;
+	control_phase::command_header cmd_header;
+	cmd_header.version=2;
+	cmd_header.reserved=0;
+	cmd_header.status=0;
+	cmd_header.sequence_number=0;
+	cmd_header.sequence_number++;
+}
+
 int main (void)
 {
-	control_phase command_header;
 	measurement_phase mp;
 	control_phase::CSLD_authentication authentication;
 	control_phase::CSLD_measurement measurement;
@@ -41,9 +57,10 @@ int main (void)
 	measurement.role=1;
 	measurement.reserved=0;
 	measurement.reserved2=0;
-	command_header.version=2;
-	command_header.reserved=0;
-
-	printf("Escreva ja!\n");
+	control_request_msg(client	
+	int size_obj=sizeof(struct control_phase);
+	printf("Tamanho da struct control_phase eh: %d\n",size_obj);
+	char tecla;
+	tecla=getchar();
     return (0);
 }
